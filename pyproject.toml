@@ -1,14 +1,32 @@
 [project]
-name = "open-in-mpv"
+name = "auto-play-in-mpv"
 version = "0.1.0"
-description = "Open online video in local mpv player"
+description = "Automatically redirect to mpv player when playing online video"
 readme = "README.md"
 requires-python = ">=3.8"
 dependencies = ["websockets>=13.0"]
+keywords = ["mpv", "video"]
+classifiers = [
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+]
+
+[project.urls]
+Homepage = "https://github.com/lxl66566/auto-play-in-mpv"
+Repository = "https://github.com/lxl66566/auto-play-in-mpv.git"
+
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["main"]
+packages = ["apim"]
+
+[project.scripts]
+apim = "apim:main"

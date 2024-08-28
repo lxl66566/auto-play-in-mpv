@@ -27,7 +27,7 @@ async def handler(websocket, path):
         await websocket.send("Received and processed")
 
 
-async def main():
+async def ws():
     try:
         async with websockets.serve(handler, "localhost", PORT):
             print(f"WebSocket server listening on port {PORT}")
@@ -39,6 +39,6 @@ async def main():
         print(f"Server got an error: {e}")
 
 
-if __name__ == "__main__":
+def main():
     while True:
-        asyncio.run(main())
+        asyncio.run(ws())

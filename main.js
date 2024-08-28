@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         Open in MPV
-// @description  Open online video in local mpv player
+// @name         Auto play in MPV
+// @description  Automatically redirect to mpv player when playing online video
 // @author       lxl66566
-// @namespace    https://github.com/lxl66566/open-in-mpv
+// @namespace    https://github.com/lxl66566/auto-play-in-mpv
 // @version      0.1.0
 // @icon 				 https://mpv.io/images/mpv-logo-128-0baae5aa.png
 // @run-at       document-start
@@ -53,9 +53,9 @@
 
 	function trigger() {
 		const url = window.location.href;
-		console.log("play-with-mpv: get url: ", url);
+		console.log("auto-play-in-mpv: get url: ", url);
 		if (targetPatterns.some((pattern) => url.match(pattern))) {
-			console.log("play-with-mpv: url match");
+			console.log("auto-play-in-mpv: url match");
 			if (sendUrlToServer(url)) window.close();
 		}
 	}
