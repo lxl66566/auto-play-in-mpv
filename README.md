@@ -15,8 +15,9 @@ Note that this is just [my config example](https://github.com/lxl66566/nixos-con
 
 ## Autostart server
 
-It's better to start the websocket server at startup.
+It's better to start the websocket server automatically at startup.
 
+- On general platforms: please use my another script [user-startup-py](https://github.com/lxl66566/user-startup-py)!
 - On NixOS: Add this to your `configuration.nix`
   ```nix
   systemd.user.services.apim = {
@@ -39,7 +40,7 @@ It's better to start the websocket server at startup.
 
 ## TODO
 
-- [ ] auto start
+- [x] auto start
 - [ ] fix behavior on youtube
 
 ## License
