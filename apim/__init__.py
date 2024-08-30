@@ -1,10 +1,28 @@
 import asyncio
+import logging
+import logging as log
 import subprocess
+from typing import Any
 from urllib.parse import urlparse, urlunparse
 
 import websockets
+from validators import url as is_valid_url
 
 PORT = 5777
+log.basicConfig(level=log.INFO)
+
+
+def run(s: str, **kwargs):
+    kwargs.setdefault("check", True)
+    kwargs.setdefault("shell", True)
+    try:
+        result: Any = subprocess.run(s, **kwargs)
+        return result
+    except subprocess.CalledProcessError as e:
+        logging.error(
+            f"Command '{e.cmd}' returned non-zero exit status {e.returncode}."
+        )
+        raise
 
 
 def remove_url_parameters(url):
@@ -18,25 +36,27 @@ def remove_url_parameters(url):
 
 async def handler(websocket, path):
     async for message in websocket:
-        print(f"Received: {message}")
+        log.info(f"Received: {message}")
+        if not is_valid_url(message):
+            log.info("Invalid URL, do nothing...")
+            continue
+        parsed = remove_url_parameters(message)
 
         # 使用 mpv 播放收到的字符串
-        subprocess.run(["mpv", remove_url_parameters(message)])
-
-        # 如果需要，可以向客户端发送确认消息
-        await websocket.send("Received and processed")
+        run(f"mpv {parsed}")
 
 
 async def ws():
     try:
         async with websockets.serve(handler, "localhost", PORT):
-            print(f"WebSocket server listening on port {PORT}")
             await asyncio.Future()
     except asyncio.exceptions.CancelledError:
-        print("Server stopped")
+        log.info("Server stopped")
         exit(0)
+    except websockets.exceptions.ConnectionClosedError:
+        pass
     except Exception as e:
-        print(f"Server got an error: {e}")
+        log.error(f"Server got an error: {e}")
 
 
 def main():

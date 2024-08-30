@@ -1,10 +1,10 @@
 [project]
 name = "auto-play-in-mpv"
-version = "0.1.0"
+version = "0.1.1"
 description = "Automatically redirect to mpv player when playing online video"
 readme = "README.md"
 requires-python = ">=3.8"
-dependencies = ["websockets>=13.0"]
+dependencies = ["websockets>=13.0", "validators"]
 keywords = ["mpv", "video"]
 classifiers = [
   "License :: OSI Approved :: MIT License",

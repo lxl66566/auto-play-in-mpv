@@ -6,11 +6,24 @@ name = "auto-play-in-mpv"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "validators" },
     { name = "websockets" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "websockets", specifier = ">=13.0" }]
+requires-dist = [
+    { name = "validators" },
+    { name = "websockets", specifier = ">=13.0" },
+]
+
+[[package]]
+name = "validators"
+version = "0.33.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/5d/af/5ad4fed95276e3eb7628d858c88cd205799bcad847e46223760a3129cbb1/validators-0.33.0.tar.gz", hash = "sha256:535867e9617f0100e676a1257ba1e206b9bfd847ddc171e4d44811f07ff0bfbf", size = 70741 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/04/22/91b4bd36df27e651daedd93d03d5d3bb6029fdb0b55494e45ee46c36c570/validators-0.33.0-py3-none-any.whl", hash = "sha256:134b586a98894f8139865953899fc2daeb3d0c35569552c5518f089ae43ed075", size = 43298 },
+]
 
 [[package]]
 name = "websockets"
