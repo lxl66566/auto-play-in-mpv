@@ -1,8 +1,5 @@
 import asyncio
-import logging
 import logging as log
-import subprocess
-from typing import Any
 from urllib.parse import urlparse, urlunparse
 
 import websockets
@@ -12,20 +9,18 @@ PORT = 5777
 log.basicConfig(level=log.INFO)
 
 
-def run(s: str, **kwargs):
-    kwargs.setdefault("check", True)
-    kwargs.setdefault("shell", True)
-    try:
-        result: Any = subprocess.run(s, **kwargs)
-        return result
-    except subprocess.CalledProcessError as e:
-        logging.error(
-            f"Command '{e.cmd}' returned non-zero exit status {e.returncode}."
-        )
-        raise
+async def run(command: str):
+    process = await asyncio.create_subprocess_shell(
+        command, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+    )
+    stdout, stderr = await process.communicate()
+    if process.returncode == 0:
+        print(f"Command output: {stdout.decode()}")
+    else:
+        print(f"Error output: {stderr.decode()}")
 
 
-def remove_url_parameters(url):
+def remove_url_parameters(url: str):
     parsed_url = urlparse(url)
     # 如果路径是 youtube.com，则不处理
     if parsed_url.netloc.endswith("youtube.com"):
@@ -34,16 +29,17 @@ def remove_url_parameters(url):
     return urlunparse(new_url)
 
 
-async def handler(websocket, path):
+async def handler(websocket: websockets.WebSocketServerProtocol, path):
     async for message in websocket:
-        log.info(f"Received: {message}")
-        if not is_valid_url(message):
+        recv = str(message).strip()
+        log.info(f"Received: {recv}")
+        if not is_valid_url(recv):
             log.info("Invalid URL, do nothing...")
             continue
-        parsed = remove_url_parameters(message)
-
-        # 使用 mpv 播放收到的字符串
-        run(f"mpv {parsed}")
+        recv = remove_url_parameters(recv)
+        handle = asyncio.create_task(websocket.send("ACK"))
+        shell = run(f"mpv {recv}")
+        await asyncio.gather(handle, shell)
 
 
 async def ws():

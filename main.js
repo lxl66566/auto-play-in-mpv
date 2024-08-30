@@ -3,7 +3,7 @@
 // @description  Automatically redirect to mpv player when playing online video
 // @author       lxl66566
 // @namespace    https://github.com/lxl66566/auto-play-in-mpv
-// @version      0.1.0
+// @version      0.1.2
 // @icon 				 https://mpv.io/images/mpv-logo-128-0baae5aa.png
 // @run-at       document-start
 // @license      MIT
@@ -41,13 +41,20 @@
 		console.error("WebSocket error: ", error);
 	};
 
-	function sendUrlToServer(url) {
+	function sendUrlToServerAndClose(url) {
 		if (socket.readyState === WebSocket.OPEN) {
 			socket.send(url);
-			return true;
+			console.log("auto-play-in-mpv: url send to socket");
+
+			// close window if received any ack message
+			socket.onmessage = function (event) {
+				console.log("auto-play-in-mpv: received ack server");
+				socket.close();
+				window.close();
+			};
 		} else {
 			console.error("WebSocket is not open");
-			return false;
+			// do not close window
 		}
 	}
 
@@ -56,7 +63,7 @@
 		console.log("auto-play-in-mpv: get url: ", url);
 		if (targetPatterns.some((pattern) => url.match(pattern))) {
 			console.log("auto-play-in-mpv: url match");
-			if (sendUrlToServer(url)) window.close();
+			sendUrlToServerAndClose(url);
 		}
 	}
 

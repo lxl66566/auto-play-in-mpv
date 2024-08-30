@@ -1,6 +1,6 @@
 [project]
 name = "auto-play-in-mpv"
-version = "0.1.1"
+version = "0.1.2"
 description = "Automatically redirect to mpv player when playing online video"
 readme = "README.md"
 requires-python = ">=3.8"
