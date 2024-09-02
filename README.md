@@ -31,6 +31,17 @@ It's better to start the websocket server automatically at startup.
       kdePackages.kwallet
     ];
   };
+  # do not forget to add your current user to some groups
+  users.users.<your_user_name> = {
+    isNormalUser = true;
+    extraGroups = [
+      "wheel"
+      "networkmanager"
+      "video"
+      "render"
+      "audio"
+    ];
+  };
   ```
 
 ## Supported sites
