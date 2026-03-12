@@ -1,60 +1,80 @@
 import asyncio
 import logging as log
-from urllib.parse import urlparse, urlunparse
+from urllib.parse import parse_qs, urlencode, urlparse
 
 import websockets
 from validators import url as is_valid_url
 
 PORT = 5777
-log.basicConfig(level=log.INFO)
+log.basicConfig(level=log.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 
-async def run(command: str):
-    process = await asyncio.create_subprocess_shell(
-        command, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+async def run(url: str):
+    process = await asyncio.create_subprocess_exec(
+        "mpv", url, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
     )
     stdout, stderr = await process.communicate()
     if process.returncode == 0:
-        print(f"Command output: {stdout.decode()}")
+        log.info(f"mpv finished playing: {url}")
     else:
-        print(f"Error output: {stderr.decode()}")
+        log.error(f"mpv error output: {stderr.decode()}")
 
 
 def remove_url_parameters(url: str):
     parsed_url = urlparse(url)
-    # 如果路径是 youtube.com，则不处理
-    if parsed_url.netloc.endswith("youtube.com"):
-        return url
-    new_url = parsed_url._replace(query="")
-    return urlunparse(new_url)
+    if "youtube.com" in parsed_url.netloc or "bilibili.com" in parsed_url.netloc:
+        # 解析原始查询参数，保留空值
+        query_params = parse_qs(parsed_url.query, keep_blank_values=True)
+        # 只保留键为 'p' 的参数
+        p_params = {k: v for k, v in query_params.items() if k == "p"}
+        if p_params:
+            new_query = urlencode(p_params, doseq=True)
+        else:
+            new_query = ""
+        new_url = parsed_url._replace(query=new_query)
+        return new_url.geturl()
+    else:
+        # 非视频网站：移除所有参数
+        new_url = parsed_url._replace(query="")
+        return new_url.geturl()
 
 
-async def handler(websocket: websockets.WebSocketServerProtocol, path):
-    async for message in websocket:
-        recv = str(message).strip()
-        log.info(f"Received: {recv}")
-        if not is_valid_url(recv):
-            log.info("Invalid URL, do nothing...")
-            continue
-        recv = remove_url_parameters(recv)
-        handle = asyncio.create_task(websocket.send("ACK"))
-        shell = run(f"mpv {recv}")
-        await asyncio.gather(handle, shell)
+async def handler(websocket, path):
+    try:
+        async for message in websocket:
+            recv = str(message).strip()
+            log.info(f"Received: {recv}")
+            if not is_valid_url(recv):
+                log.info("Invalid URL, do nothing...")
+                continue
+
+            recv = remove_url_parameters(recv)
+            await websocket.send("ACK")
+            asyncio.create_task(run(recv))
+
+    except websockets.exceptions.ConnectionClosed:
+        log.info("Client disconnected.")
 
 
 async def ws():
-    try:
-        async with websockets.serve(handler, "localhost", PORT):
-            await asyncio.Future()
-    except asyncio.exceptions.CancelledError:
-        log.info("Server stopped")
-        exit(0)
-    except websockets.exceptions.ConnectionClosedError:
-        pass
-    except Exception as e:
-        log.error(f"Server got an error: {e}")
+    async with websockets.serve(handler, "localhost", PORT):
+        log.info(f"Server started on ws://localhost:{PORT}")
+        await asyncio.Future()  # run forever
 
 
 def main():
     while True:
-        asyncio.run(ws())
+        try:
+            asyncio.run(ws())
+        except KeyboardInterrupt:
+            log.info("Server manually stopped.")
+            break
+        except Exception as e:
+            log.error(f"Server got an error: {e}, restarting...")
+            import time
+
+            time.sleep(1)
+
+
+if __name__ == "__main__":
+    main()
